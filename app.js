@@ -53,4 +53,35 @@ app.post('/recommendation', async (req, res) => {
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+
+  // Import python-shell
+const { PythonShell } = require('python-shell');
+
+// Route to get crop recommendations
+app.post('/recommendation', async (req, res) => {
+  const { N, P, K, temperature, humidity, ph, rainfall } = req.body;
+
+  // Options to pass arguments to the Python script
+  let options = {
+    args: [N, P, K, temperature, humidity, ph, rainfall]
+  };
+
+  // Call the Python script that makes crop recommendations
+  PythonShell.run('predict.py', options, function (err, results) {
+    if (err) {
+      console.error('Error running Python script:', err);
+      return res.status(500).send('Error processing your request.');
+    }
+
+    // The result will be the predicted crop
+    const recommendedCrop = results[0];  // Python script prints out the result
+
+    // Send the prediction back as response
+    res.status(200).send({
+      message: 'Crop recommendation based on weather and soil data',
+      recommendedCrop: recommendedCrop
+    });
+  });
+});
+
 });

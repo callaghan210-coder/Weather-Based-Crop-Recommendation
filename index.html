@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crop Recommendation</title>
+</head>
+<body>
+  <h1>Weather-based Crop Recommendation</h1>
+  
+  <form id="recommendationForm">
+    <label>N: <input type="number" name="N" id="N" required></label><br><br>
+    <label>P: <input type="number" name="P" id="P" required></label><br><br>
+    <label>K: <input type="number" name="K" id="K" required></label><br><br>
+    <label>Temperature: <input type="number" name="temperature" id="temperature" required></label><br><br>
+    <label>Humidity: <input type="number" name="humidity" id="humidity" required></label><br><br>
+    <label>pH: <input type="number" name="ph" id="ph" required></label><br><br>
+    <label>Rainfall: <input type="number" name="rainfall" id="rainfall" required></label><br><br>
+    <button type="submit">Get Recommendation</button>
+  </form>
+
+  <p id="result"></p>
+
+  <script>
+    const form = document.getElementById('recommendationForm');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      const data = {
+        N: document.getElementById('N').value,
+        P: document.getElementById('P').value,
+        K: document.getElementById('K').value,
+        temperature: document.getElementById('temperature').value,
+        humidity: document.getElementById('humidity').value,
+        ph: document.getElementById('ph').value,
+        rainfall: document.getElementById('rainfall').value
+      };
+
+      fetch('http://localhost:3000/recommendation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => {
+        result.innerHTML = 'Recommended Crop: ' + data.recommendedCrop;
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        result.innerHTML = 'An error occurred';
+      });
+    });
+  </script>
+</body>
+</html>
