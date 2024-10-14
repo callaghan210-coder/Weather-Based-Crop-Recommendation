@@ -2,12 +2,15 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
+const { PythonShell } = require('python-shell');
 const { connectToDb, sql } = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware to parse incoming requests
+// Middleware
+app.use(cors()); // Use CORS middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -42,24 +45,7 @@ app.post('/login', async (req, res) => {
 app.post('/recommendation', async (req, res) => {
   const { N, P, K, temperature, humidity, ph, rainfall } = req.body;
 
-  // Here you would integrate the crop recommendation model logic
-  // For simplicity, we'll send a placeholder response for now
-  res.status(200).send({
-    message: 'Crop recommendation based on weather and soil data',
-    recommendedCrop: 'Placeholder Crop' // You can replace this with actual logic from your model
-  });
-});
-
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-
-  // Import python-shell
-const { PythonShell } = require('python-shell');
-
-// Route to get crop recommendations
-app.post('/recommendation', async (req, res) => {
-  const { N, P, K, temperature, humidity, ph, rainfall } = req.body;
+  console.log('Received POST request with data:', { N, P, K, temperature, humidity, ph, rainfall }); // Log the received data
 
   // Options to pass arguments to the Python script
   let options = {
@@ -69,12 +55,22 @@ app.post('/recommendation', async (req, res) => {
   // Call the Python script that makes crop recommendations
   PythonShell.run('predict.py', options, function (err, results) {
     if (err) {
-      console.error('Error running Python script:', err);
+      console.error('Error running Python script:', err); // Log the error
       return res.status(500).send('Error processing your request.');
+    }
+
+    console.log('Python script executed successfully.'); // Log successful execution
+    console.log('Python script output:', results); // Log the result
+
+    if (!results || results.length === 0) {
+      console.error('No prediction received from Python script.'); // Log if no output
+      return res.status(500).send('No prediction received from Python script.');
     }
 
     // The result will be the predicted crop
     const recommendedCrop = results[0];  // Python script prints out the result
+
+    console.log('Recommended Crop:', recommendedCrop); // Log the predicted crop
 
     // Send the prediction back as response
     res.status(200).send({
@@ -84,4 +80,7 @@ app.post('/recommendation', async (req, res) => {
   });
 });
 
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
